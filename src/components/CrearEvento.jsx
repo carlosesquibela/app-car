@@ -1,35 +1,41 @@
 import { useState } from 'react'
-import { createEvento } from '../services/eventos'
+import eventosService from '../services/eventos'
 
 export default function CrearEvento({ onCreated }) {
-  const [nombre, setNombre] = useState('')
-  const [cliente, setCliente] = useState('')
-  const [inicio, setInicio] = useState('')
-  const [fin, setFin] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [form, setForm] = useState({
+    nombre_evento: '',
+    cliente: '',
+    fecha_inicio: '',
+    localidad: '',
+    provincia: '',
+    direccion: '',
+    telefono_cliente: ''
+  })
 
-  const handleSubmit = async e => {
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const change = e => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const submit = async e => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
     try {
-      const nuevo = await createEvento({
-        nombre_evento: nombre,
-        cliente,
-        fecha_inicio: inicio,
-        fecha_fin: fin
+      await eventosService.crearEvento(form)
+      setForm({
+        nombre_evento: '',
+        cliente: '',
+        fecha_inicio: '',
+        localidad: '',
+        provincia: '',
+        direccion: '',
+        telefono_cliente: ''
       })
-
-      // limpiar
-      setNombre('')
-      setCliente('')
-      setInicio('')
-      setFin('')
-
-      // avisar al padre
-      onCreated?.(nuevo)
+      onCreated()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -38,52 +44,77 @@ export default function CrearEvento({ onCreated }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-      <h3>Crear evento</h3>
+    <form onSubmit={submit} style={{ marginBottom: 20 }}>
+      <h4>Nuevo evento</h4>
 
       <input
+        name="nombre_evento"
         placeholder="Nombre del evento"
-        value={nombre}
-        onChange={e => setNombre(e.target.value)}
+        value={form.nombre_evento}
+        onChange={change}
         required
       />
-      <br />
 
       <input
+        name="cliente"
         placeholder="Cliente"
-        value={cliente}
-        onChange={e => setCliente(e.target.value)}
+        value={form.cliente}
+        onChange={change}
         required
+        style={{ marginLeft: 10 }}
       />
-      <br />
 
-      <label>
-        Inicio:
-        <input
-          type="date"
-          value={inicio}
-          onChange={e => setInicio(e.target.value)}
-          required
-        />
-      </label>
-      <br />
+      <input
+        type="date"
+        name="fecha_inicio"
+        value={form.fecha_inicio}
+        onChange={change}
+        required
+        style={{ marginLeft: 10 }}
+      />
 
-      <label>
-        Fin:
-        <input
-          type="date"
-          value={fin}
-          onChange={e => setFin(e.target.value)}
-          required
-        />
-      </label>
-      <br />
+      <br /><br />
 
-      <button disabled={loading}>
-        {loading ? 'Creando…' : 'Crear'}
+      <input
+        name="localidad"
+        placeholder="Localidad"
+        value={form.localidad}
+        onChange={change}
+      />
+
+      <input
+        name="provincia"
+        placeholder="Provincia"
+        value={form.provincia}
+        onChange={change}
+        style={{ marginLeft: 10 }}
+      />
+
+      <input
+        name="direccion"
+        placeholder="Dirección"
+        value={form.direccion}
+        onChange={change}
+        style={{ marginLeft: 10 }}
+      />
+
+      <input
+        name="telefono_cliente"
+        placeholder="Teléfono"
+        value={form.telefono_cliente}
+        onChange={change}
+        style={{ marginLeft: 10 }}
+      />
+
+      <br /><br />
+
+      <button type="submit" disabled={loading}>
+        {loading ? 'Creando…' : 'Crear evento'}
       </button>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && (
+        <p style={{ color: 'red' }}>Error: {error}</p>
+      )}
     </form>
   )
 }

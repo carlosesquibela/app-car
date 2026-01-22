@@ -6,16 +6,12 @@ const getArticulos = async () => {
     .select('*')
     .order('nombre')
 
-  if (error) {
-    console.error(error)
-    return []
-  }
-
+  if (error) throw error
   return data
 }
 
 const crearArticulo = async articulo => {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('articulos')
     .insert({
       nombre: articulo.nombre,
@@ -25,14 +21,42 @@ const crearArticulo = async articulo => {
       estado: 'ACTIVO',
       observaciones: articulo.observaciones
     })
-    .select()
-    .single()
 
   if (error) throw error
-  return data
+}
+
+const actualizarArticulo = async (id_articulo, cambios) => {
+  const { error } = await supabase
+    .from('articulos')
+    .update(cambios)
+    .eq('id_articulo', id_articulo)
+
+  if (error) throw error
+}
+
+const enviarATaller = async ({ id_articulo, observaciones }) => {
+  // cambia estado del artículo
+  const { error } = await supabase
+    .from('articulos')
+    .update({
+      estado: 'EN_TALLER',
+      observaciones
+    })
+    .eq('id_articulo', id_articulo)
+
+  if (error) throw error
+
+  // crea registro en taller
+  await supabase.from('taller').insert({
+    id_articulo,
+    estado: 'EN_REVISION',
+    observaciones
+  })
 }
 
 export default {
   getArticulos,
-  crearArticulo
+  crearArticulo,
+  actualizarArticulo,
+  enviarATaller
 }
